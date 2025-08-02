@@ -1,0 +1,6 @@
+{
+  "name": "ticket-system",
+  "dependencies": {
+    "nodemailer": "^6.9.1"
+  }
+}
