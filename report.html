@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Reports</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #28a745;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.download {
+      background: #17a2b8;
+      color: white;
+    }
+    button.email {
+      background: #6f42c1;
+      color: white;
+    }
+    button.new-ticket {
+      background: #28a745;
+      color: white;
+    }
+    .email-form {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    .email-form input {
+      padding: 8px;
+      margin-right: 10px;
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .status-message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+  <!-- Include html2canvas for screenshot functionality -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Ticket Reports</h2>
+    
+    <div class="email-form">
+      <h3>Email Report</h3>
+      <input type="email" id="emailAddress" placeholder="Enter email address" required>
+      <button class="email" onclick="sendEmailReport()">Send Report</button>
+      <div id="statusMessage" class="status-message"></div>
+    </div>
+    
+    <div id="reportContent">
+      <h3>Ticket Summary - <span id="reportDate"></span></h3>
+      <div id="reportData">
+        <!-- Data will be inserted here by JavaScript -->
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="download" onclick="downloadReport()">Download Report</button>
+      <button class="new-ticket" onclick="window.location.href='sap.html'">Create New Ticket</button>
+    </div>
+  </div>
+
+  <script>
+    // Load saved tickets from localStorage
+    function loadTickets() {
+      // Set current date in report
+      document.getElementById('reportDate').textContent = new Date().toLocaleDateString();
+      
+      const tickets = JSON.parse(localStorage.getItem('tickets') || []);
+      const reportDiv = document.getElementById('reportData');
+      
+      if (tickets.length === 0) {
+        reportDiv.innerHTML = '<p>No tickets found. Create your first ticket to get started.</p>';
+        return;
+      }
+
+      // Group tickets by status (example grouping)
+      const openTickets = tickets.filter(t => !t.completedMonth);
+      const completedTickets = tickets.filter(t => t.completedMonth);
+      
+      let tableHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket #</th>
+              <th>Company</th>
+              <th>Contact</th>
+              <th>Priority</th>
+              <th>Created</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tickets.map(ticket => `
+              <tr>
+                <td>${ticket.ticketNumber || '-'}</td>
+                <td>${ticket.company || '-'}</td>
+                <td>${ticket.fullname || '-'}<br>${ticket.email || ''}</td>
+                <td>${ticket.priority || '-'}</td>
+                <td>${ticket.timestamp ? new Date(ticket.timestamp).toLocaleDateString() : '-'}</td>
+                <td>${ticket.completedMonth ? 'Completed' : 'Open'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <p>Total Tickets: ${tickets.length} (Open: ${openTickets.length}, Completed: ${completedTickets.length})</p>
+      `;
+      
+      reportDiv.innerHTML = tableHTML;
+    }
+
+    // Download report as CSV
+    function downloadReport() {
+      const tickets = JSON.parse(localStorage.getItem('tickets') || []);
+      if (tickets.length === 0) {
+        showStatus('No tickets to download', 'error');
+        return;
+      }
+
+      // Create CSV content
+      const headers = ['Ticket Number', 'Company', 'Contact', 'Email', 'Priority', 'Created', 'Status'];
+      const rows = tickets.map(ticket => [
+        ticket.ticketNumber || '',
+        ticket.company || '',
+        ticket.fullname || '',
+        ticket.email || '',
+        ticket.priority || '',
+        ticket.timestamp ? new Date(ticket.timestamp).toLocaleDateString() : '',
+        ticket.completedMonth ? 'Completed' : 'Open'
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tickets_report_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Send report via email
+    function sendEmailReport() {
+      const email = document.getElementById('emailAddress').value.trim();
+      const statusDiv = document.getElementById('statusMessage');
+      
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showStatus('Please enter a valid email address', 'error');
+        return;
+      }
+
+      showStatus('Generating report...', 'info');
+      
+      // Capture screenshot of report
+      html2canvas(document.getElementById('reportContent')).then(canvas => {
+        const screenshot = canvas.toDataURL('image/png');
+        
+        // In a real implementation, you would send this to your server
+        // For this example, we'll simulate the email sending
+        setTimeout(() => {
+          showStatus(`Report sent successfully to ${email}`, 'success');
+          
+          // In a real app, you would:
+          // 1. Send the screenshot and email to your backend
+          // 2. Have the backend send the actual email
+          // 3. Handle success/error responses
+        }, 1500);
+      }).catch(error => {
+        console.error('Error generating report:', error);
+        showStatus('Failed to generate report', 'error');
+      });
+    }
+
+    // Show status message
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.style.display = 'block';
+      statusDiv.className = `status-message ${type}`;
+      statusDiv.textContent = message;
+      
+      // Auto-hide success messages after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          statusDiv.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    // Load tickets when page loads
+    window.onload = function() {
+      loadTickets();
+      
+      // Check if we have a ticket number in URL (redirect from form)
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = urlParams.get('email');
+      if (emailParam) {
+        document.getElementById('emailAddress').value = emailParam;
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    label.required:after {
+      content: " *";
+      color: #dc3545;
+    }
+    input[type=text],
+    input[type=email],
+    input[type=file],
+    input[type=date],
+    input[type=month],
+    textarea,
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    .button-group {
+      margin: 25px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    button.submit {
+      background: #28a745;
+      color: white;
+    }
+    button.submit:hover {
+      background: #218838;
+    }
+    button.reset {
+      background: #ffc107;
+      color: #212529;
+    }
+    button.reset:hover {
+      background: #e0a800;
+    }
+    button.cancel {
+      background: #dc3545;
+      color: white;
+    }
+    button.cancel:hover {
+      background: #c82333;
+    }
+    button.new-ticket {
+      background: #17a2b8;
+      color: white;
+    }
+    button.new-ticket:hover {
+      background: #138496;
+    }
+    section {
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    section h3 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #17a2b8;
+    }
+    .ticket-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .ticket-number-label {
+      color: #17a2b8;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="ticket-header">
+      <h2>Ticket Details</h2>
+      <div class="ticket-number">
+        <span class="ticket-number-label">Ticket #: </span>
+        <span id="displayTicketNumber"></span>
+      </div>
+    </div>
+    
+    <form id="detailsForm">
+      <input type="hidden" id="ticketNumber" name="ticketNumber">
+      
+      <section>
+        <h3>Ticket Information</h3>
+        <div class="form-group">
+          <label class="required">Company Name</label>
+          <input type="text" name="company" required>
+        </div>
+        <div class="form-group">
+          <label class="required">Describe Your Issue</label>
+          <textarea name="details" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="required">Issue Summary</label>
+          <textarea name="summary" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>File Upload</label>
+          <input type="file" name="attachment">
+        </div>
+      </section>
+
+      <section>
+        <h3>Priority & Classification</h3>
+        <div class="form-group">
+          <label class="required">Priority Level</label>
+          <select name="priority" required>
+            <option value="">Select Priority</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Request Type</label>
+          <select name="type">
+            <option value="">Select Type</option>
+            <option value="Bug">Bug</option>
+            <option value="Feature">Feature Request</option>
+            <option value="Enhancement">Enhancement</option>
+          </select>
+        </div>
+      </section>
+
+      <section>
+        <h3>Time Tracking</h3>
+        <div class="form-group">
+          <label>Hours Logged (Functional)</label>
+          <input type="text" name="hoursFunc" placeholder="HH:MM:SS">
+        </div>
+        <div class="form-group">
+          <label>Hours Logged (Technical)</label>
+          <input type="text" name="hoursTech" placeholder="HH:MM:SS">
+        </div>
+      </section>
+
+      <section>
+        <h3>Additional Information</h3>
+        <div class="form-group">
+          <label>Requested By</label>
+          <input type="text" name="requestedBy">
+        </div>
+        <div class="form-group">
+          <label>Requested Month</label>
+          <input type="month" name="requestedMonth">
+        </div>
+        <div class="form-group">
+          <label>Completed Month</label>
+          <input type="month" name="completedMonth">
+        </div>
+        <div class="form-group">
+          <label>TR No.</label>
+          <input type="text" name="trNo">
+        </div>
+        <div class="form-group">
+          <label>TR Movement Date to PRD</label>
+          <input type="date" name="trDate">
+        </div>
+        <div class="form-group">
+          <label>Consultant Name</label>
+          <input type="text" name="consultant">
+        </div>
+      </section>
+
+      <div class="button-group">
+        <button type="submit" class="submit">Save Ticket</button>
+        <button type="reset" class="reset">Reset</button>
+        <button type="button" class="new-ticket" onclick="window.location.href='sap.html'">Create New Ticket</button>
+        <button type="button" class="cancel" onclick="window.location.href='report.html'">View All Tickets</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get ticket number from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const ticketNumber = urlParams.get('ticket');
+      
+      // Display ticket number
+      if (ticketNumber) {
+        document.getElementById('displayTicketNumber').textContent = ticketNumber;
+        document.getElementById('ticketNumber').value = ticketNumber;
+        
+        // Try to load existing data for this ticket
+        const tickets = JSON.parse(localStorage.getItem('tickets') || []);
+        const existingTicket = tickets.find(t => t.ticketNumber === ticketNumber);
+        
+        if (existingTicket) {
+          // Auto-fill form with existing data
+          const form = document.getElementById('detailsForm');
+          for (const key in existingTicket) {
+            if (form.elements[key]) {
+              form.elements[key].value = existingTicket[key];
+            }
+          }
+        }
+      } else {
+        alert('No ticket number provided. Redirecting to new ticket form.');
+        window.location.href = 'sap.html';
+      }
+    });
+
+    // Form submission handler
+    document.getElementById('detailsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get ticket number
+      const ticketNumber = document.getElementById('ticketNumber').value;
+      
+      // Collect form data
+      const formData = new FormData(e.target);
+      const ticketData = { ticketNumber };
+      
+      formData.forEach((value, key) => {
+        // Handle file inputs differently
+        ticketData[key] = value instanceof File ? value.name : value;
+      });
+      
+      // Add/update timestamp
+      ticketData.timestamp = new Date().toISOString();
+      
+      // Save to localStorage
+      const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+      
+      // Find and remove existing ticket if it exists
+      const existingIndex = tickets.findIndex(t => t.ticketNumber === ticketNumber);
+      if (existingIndex !== -1) {
+        tickets.splice(existingIndex, 1);
+      }
+      
+      // Add updated ticket
+      tickets.push(ticketData);
+      localStorage.setItem('tickets', JSON.stringify(tickets));
+      
+      // Show success message
+      alert(`Ticket #${ticketNumber} saved successfully!`);
+      
+      // Optionally redirect to report page
+      // window.location.href = 'report.html';
+    });
+  </script>
+</body>
+</html>
