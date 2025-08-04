@@ -96,6 +96,11 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+    .info {
+      background: #cce5ff;
+      color: #004085;
+      border: 1px solid #b8daff;
+    }
   </style>
   <!-- Include html2canvas for screenshot functionality -->
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -123,60 +128,14 @@
       <button class="new-ticket" onclick="window.location.href='sap.html'">Create New Ticket</button>
     </div>
   </div>
-<!-- Add this to your <script> section -->
-<script>
-  async function sendEmailReport() {
-    const email = document.getElementById('emailAddress').value.trim();
-    const statusDiv = document.getElementById('statusMessage');
-    
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showStatus('Please enter a valid email address', 'error');
-      return;
-    }
 
-    showStatus('Generating report...', 'info');
-    
-    try {
-      // 1. Capture report as image
-      const canvas = await html2canvas(document.getElementById('reportContent'));
-      const screenshot = canvas.toDataURL('image/png');
-      
-      // 2. Prepare data
-      const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
-      const reportData = {
-        email,
-        screenshot,
-        ticketCount: tickets.length,
-        date: new Date().toLocaleDateString()
-      };
-      
-      // 3. Send to Netlify Function
-      const response = await fetch('/.netlify/functions/send-report', {
-        method: 'POST',
-        body: JSON.stringify(reportData),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        showStatus(`Report sent to ${email} successfully!`, 'success');
-      } else {
-        throw new Error(result.error || 'Failed to send email');
-      }
-    } catch (error) {
-      console.error('Email Error:', error);
-      showStatus(`Email failed: ${error.message}`, 'error');
-    }
-  }
-</script>
   <script>
     // Load saved tickets from localStorage
     function loadTickets() {
       // Set current date in report
       document.getElementById('reportDate').textContent = new Date().toLocaleDateString();
       
-      const tickets = JSON.parse(localStorage.getItem('tickets') || []);
+      const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
       const reportDiv = document.getElementById('reportData');
       
       if (tickets.length === 0) {
@@ -184,7 +143,7 @@
         return;
       }
 
-      // Group tickets by status (example grouping)
+      // Group tickets by status
       const openTickets = tickets.filter(t => !t.completedMonth);
       const completedTickets = tickets.filter(t => t.completedMonth);
       
@@ -255,9 +214,8 @@
     }
 
     // Send report via email
-    function sendEmailReport() {
+    async function sendEmailReport() {
       const email = document.getElementById('emailAddress').value.trim();
-      const statusDiv = document.getElementById('statusMessage');
       
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         showStatus('Please enter a valid email address', 'error');
@@ -266,24 +224,38 @@
 
       showStatus('Generating report...', 'info');
       
-      // Capture screenshot of report
-      html2canvas(document.getElementById('reportContent')).then(canvas => {
+      try {
+        // Capture screenshot of report
+        const canvas = await html2canvas(document.getElementById('reportContent'));
         const screenshot = canvas.toDataURL('image/png');
         
-        // In a real implementation, you would send this to your server
-        // For this example, we'll simulate the email sending
-        setTimeout(() => {
-          showStatus(`Report sent successfully to ${email}`, 'success');
-          
-          // In a real app, you would:
-          // 1. Send the screenshot and email to your backend
-          // 2. Have the backend send the actual email
-          // 3. Handle success/error responses
-        }, 1500);
-      }).catch(error => {
-        console.error('Error generating report:', error);
-        showStatus('Failed to generate report', 'error');
-      });
+        // Get ticket data
+        const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+        
+        // Send to backend
+        const response = await fetch('http://localhost:3000/send-report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            screenshot: screenshot,
+            reportData: tickets
+          })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+          showStatus(result.message || 'Report sent successfully', 'success');
+        } else {
+          showStatus(result.error || 'Failed to send report', 'error');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showStatus('Failed to send report. Please try again.', 'error');
+      }
     }
 
     // Show status message
@@ -314,5 +286,4 @@
     };
   </script>
 </body>
-
 </html>
